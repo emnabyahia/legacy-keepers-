@@ -1,0 +1,169 @@
+#include "bg.h"  // Include the header file at the top
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+int main(int argc, char *argv[]) {
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        printf("Failed to initialize SDL: %s\n", SDL_GetError());
+        return 1;
+    }
+    printf("SDL initialized successfully.\n");
+
+    if (TTF_Init() != 0) {
+        printf("Failed to initialize TTF: %s\n", TTF_GetError());
+        SDL_Quit();
+        return 1;
+    }
+    printf("TTF initialized successfully.\n");
+
+    // Variables
+    background bg;
+    animate player1, player2; // Two players
+    SDL_Surface *screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32, SDL_SWSURFACE | SDL_DOUBLEBUF);
+    SDL_Surface *left, *right;
+    SDL_Rect leftr, rightr;
+    Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096);
+    int run = 1;
+    SDL_Event ev;
+
+    // Timer variables
+    int temp = 0; // Tracks total elapsed time in seconds
+    int min = 0, sec = 0;
+
+    // Initialize screen and surfaces
+    leftr.x = 0;
+    leftr.y = 0;
+    leftr.w = SCREEN_WIDTH / 2;
+    leftr.h = SCREEN_HEIGHT;
+
+    rightr.x = SCREEN_WIDTH / 2;
+    rightr.y = 0;
+    rightr.w = SCREEN_WIDTH / 2;
+    rightr.h = SCREEN_HEIGHT;
+
+    left = SDL_CreateRGBSurface(SDL_HWSURFACE, SCREEN_WIDTH / 2, SCREEN_HEIGHT, 32, 0, 0, 0, 0);
+    SDL_FillRect(left, NULL, SDL_MapRGB(screen->format, 255, 0, 0));
+    right = SDL_CreateRGBSurface(SDL_HWSURFACE, SCREEN_WIDTH / 2, SCREEN_HEIGHT, 32, 0, 0, 0, 0);
+    SDL_FillRect(right, NULL, SDL_MapRGB(screen->format, 0, 255, 0));
+
+    printf("Left surface dimensions: %dx%d\n", left->w, left->h);
+    printf("Right surface dimensions: %dx%d\n", right->w, right->h);
+
+    // Load font
+    TTF_Font *font = TTF_OpenFont("arial.ttf", 40);
+    if (font == NULL) {
+        printf("Failed to load font: %s\n", TTF_GetError());
+        SDL_Quit();
+        return 1;
+    }
+    printf("Font loaded successfully.\n");
+
+    // Load music
+    Mix_Music *bgMusic = Mix_LoadMUS("music.mp3");
+    if (bgMusic == NULL) {
+        printf("Failed to load background sound: %s\n", Mix_GetError());
+        SDL_Quit();
+        return 1;
+    }
+    printf("Background music loaded successfully.\n");
+
+    // Initialize background and animations
+    if (init_bg(&bg) != 0 || 
+        init_animation(&player1, "kath.png") != 0 || 
+        init_animation(&player2, "kath2.png") != 0) {
+        printf("Failed to initialize resources.\n");
+        SDL_Quit();
+        return 1;
+    }
+
+    // Set initial positions for players
+    player1.pos2.x = 100; // Player 1 starts on the left
+    player1.pos2.y = SCREEN_HEIGHT - 150;
+    player2.pos2.x = SCREEN_WIDTH - 150; // Player 2 starts on the right
+    player2.pos2.y = SCREEN_HEIGHT - 150;
+
+    printf("Player 1 Position: (%d, %d)\n", player1.pos2.x, player1.pos2.y);
+    printf("Player 2 Position: (%d, %d)\n", player2.pos2.x, player2.pos2.y);
+
+    // Game loop
+    while (run) {
+        while (SDL_PollEvent(&ev)) {
+            switch (ev.type) {
+                case SDL_QUIT:
+                    run = 0;
+                    break;
+                case SDL_KEYDOWN:
+                    switch (ev.key.keysym.sym) {
+                        // Player 1 controls (arrow keys)
+                        case SDLK_LEFT:
+                            player1.pos2.x -= ANIM_STEP_X; // Move left
+                            break;
+                        case SDLK_RIGHT:
+                            player1.pos2.x += ANIM_STEP_X; // Move right
+                            break;
+                        case SDLK_UP:
+                            player1.pos2.y -= ANIM_STEP_X; // Jump (move up)
+                            break;
+                        case SDLK_DOWN:
+                            player1.pos2.y += ANIM_STEP_X; // Move down
+                            break;
+
+                        // Player 2 controls (Z, Q, D, S)
+                        case SDLK_q:
+                            player2.pos2.x -= ANIM_STEP_X; // Move left
+                            break;
+                        case SDLK_d:
+                            player2.pos2.x += ANIM_STEP_X; // Move right
+                            break;
+                        case SDLK_z:
+                            player2.pos2.y -= ANIM_STEP_X; // Jump (move up)
+                            break;
+                        case SDLK_s:
+                            player2.pos2.y += ANIM_STEP_X; // Move down
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        // Update timer
+        temp++; // Increment total elapsed time in seconds
+        sec = temp % 60; // Calculate seconds
+        min = temp / 60; // Calculate minutes
+
+        // Render everything
+        SDL_BlitSurface(left, NULL, screen, &leftr);
+        SDL_BlitSurface(right, NULL, screen, &rightr);
+        display_bg(bg, left);
+        display_bg(bg, right);
+
+        // Display players
+        display_animation(&player1, left);
+        display_animation(&player2, right);
+
+        // Display the timer instead of the score
+        display_score(left, font, min, sec); // Pass minutes and seconds
+        display_score(right, font, min, sec);
+
+        SDL_Flip(screen);
+        SDL_Delay(10); // Adjust frame rate (10 ms delay = ~100 FPS)
+    }
+
+    // Cleanup
+    SDL_FreeSurface(left);
+    SDL_FreeSurface(right);
+    if (bg.img) SDL_FreeSurface(bg.img);
+    if (player1.img1) SDL_FreeSurface(player1.img1);
+    if (player2.img1) SDL_FreeSurface(player2.img1);
+    Mix_FreeMusic(bgMusic);
+    Mix_CloseAudio();
+    TTF_CloseFont(font);
+    TTF_Quit();
+    SDL_Quit();
+
+    return 0;
+}
