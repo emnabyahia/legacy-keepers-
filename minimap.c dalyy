@@ -1,0 +1,25 @@
+#include "minimap.h"
+void initMinimap(Minimap *m) {// pointeur structure mini map
+    m->mini_background = SDL_LoadBMP("minibackground.bmp");
+    m->mini_joueur = SDL_LoadBMP("point.bmp");
+    m->pos_minimap.x = 5;
+    m->pos_minimap.y = 5; 
+    m->pos_joueur.x = 0;
+    m->pos_joueur.y = 0;
+}
+void afficherMinimap(Minimap m, SDL_Surface *screen) { 
+    SDL_BlitSurface(m.mini_background, NULL, screen, &m.pos_minimap);
+    SDL_Rect absPos = { m.pos_minimap.x + m.pos_joueur.x, m.pos_minimap.y + m.pos_joueur.y }; 
+    SDL_BlitSurface(m.mini_joueur, NULL, screen, &absPos);
+}
+void majMinimap(SDL_Rect posJoueur, Minimap *m, SDL_Rect camera, int scale) {  
+    SDL_Rect abs;
+    abs.x = posJoueur.x + camera.x;
+    abs.y = posJoueur.y + camera.y;
+    m->pos_joueur.x = abs.x * scale / 100;
+    m->pos_joueur.y = abs.y * scale / 100; 
+}
+void libererMinimap(Minimap *m) {
+    SDL_FreeSurface(m->mini_background);
+    SDL_FreeSurface(m->mini_joueur);
+}
