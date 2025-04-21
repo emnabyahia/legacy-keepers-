@@ -1,0 +1,38 @@
+#ifndef MENU_H
+#define MENU_H
+
+#include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+
+
+typedef struct {
+    SDL_Surface *image;
+    SDL_Rect position;
+} Image;
+
+
+typedef struct {
+    Image image;
+    void (*action)(void);
+} Button;
+
+
+extern Mix_Music *musicMainMenu;
+extern Image backgroundMainMenu;
+extern Button buttonPlay;
+extern Button buttonOptions;
+extern Button buttonQuit;
+
+
+void initializeMenu(SDL_Surface **screen);
+void loadMenuAssets(void);
+void displayMainMenu(SDL_Surface *screen);
+void handleButtonClick(Button *button);
+void cleanup(SDL_Surface *screen);
+
+
+void handlePlayAction(void);
+void handleOptionsAction(void);
+void handleQuitAction(void);
+
+#endif 
