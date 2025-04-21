@@ -1,0 +1,74 @@
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <stdio.h>
+#include <string.h>
+#include "minimap.h"
+SDL_Color GetPixel(SDL_Surface *surface, int x, int y) { 
+    SDL_Color color = {0, 0, 0};
+    if (surface == NULL || x < 0 || x >= surface->w || y < 0 || y >= surface->h) return color;
+    Uint32 col = 0;
+    char* pPosition = (char*) surface->pixels + (surface->pitch * y) + (surface->format->BytesPerPixel * x);
+    if (pPosition < (char*)surface->pixels || pPosition >= ((char*)surface->pixels + surface->pitch * surface->h)) return color;
+    memcpy(&col, pPosition, surface->format->BytesPerPixel);
+    SDL_GetRGB(col, surface->format, &color.r, &color.g, &color.b);
+    return color;
+}
+
+int collisionParfaite(SDL_Surface *masque, SDL_Rect perso) { 
+    int posX[8] = {perso.x, perso.x + perso.w/2, perso.x + perso.w, perso.x, perso.x, perso.x + perso.w/2, perso.x + perso.w, perso.x + perso.w};
+    int posY[8] = {perso.y, perso.y, perso.y, perso.y + perso.h/2, perso.y + perso.h, perso.y + perso.h, perso.y + perso.h, perso.y + perso.h/2};
+    for (int i = 0; i < 8; i++) { 
+        SDL_Color c = GetPixel(masque, posX[i], posY[i]); 
+        if (c.r == 0 && c.g == 0 && c.b == 0) return 1; 
+    }
+    return 0;
+}
+void animerBackground(SDL_Rect *camera, SDL_Surface *background, SDL_Surface *screen) {
+    SDL_BlitSurface(background, camera, screen, NULL);
+}
+int main(int argc, char *argv[]) {
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Surface *screen = SDL_SetVideoMode(1500, 900, 32, SDL_SWSURFACE);
+    SDL_Surface *background = SDL_LoadBMP("background.bmp");
+    SDL_Surface *masque = SDL_LoadBMP("masquebackground.bmp");
+    SDL_Surface *perso = SDL_LoadBMP("joueur.bmp");
+    SDL_Rect posPerso = {0, 0, perso->w, perso->h};
+    SDL_Rect camera = {0, 0, 1500, 900};
+    Minimap m;
+    initMinimap(&m);
+    int continuer = 1;
+    SDL_Event event;
+    while (continuer) {
+        SDL_PollEvent(&event);
+        if (event.type == SDL_QUIT) continuer = 0;
+
+        if (event.type == SDL_KEYDOWN) {
+            switch (event.key.keysym.sym) {
+                case SDLK_RIGHT:
+                    if (!collisionParfaite(masque, posPerso)) posPerso.x += 2; else posPerso.x -= 4;
+                    break;
+                case SDLK_LEFT:
+                    if (!collisionParfaite(masque, posPerso)) posPerso.x -= 2; else posPerso.x += 4;
+                    break;
+                case SDLK_UP:
+                    if (!collisionParfaite(masque, posPerso)) posPerso.y -= 2; else posPerso.y += 4;
+                    break;
+                case SDLK_DOWN:
+                    if (!collisionParfaite(masque, posPerso)) posPerso.y += 2; else posPerso.y -= 4;
+                    break;
+            }
+        }
+        animerBackground(&camera, background, screen);
+        SDL_BlitSurface(perso, NULL, screen, &posPerso);
+        majMinimap(posPerso, &m, camera, 20);
+        afficherMinimap(m, screen);
+        SDL_Flip(screen);
+        SDL_Delay(16);
+    }
+    libererMinimap(&m);
+    SDL_FreeSurface(perso);
+    SDL_FreeSurface(background);
+    SDL_FreeSurface(masque);
+    SDL_Quit();
+    return 0;
+}
