@@ -1,0 +1,17 @@
+#ifndef MINIMAP_H
+#define MINIMAP_H
+#include <SDL/SDL.h>
+typedef struct {
+    SDL_Surface *mini_background; 
+    SDL_Surface *mini_joueur; 
+    SDL_Rect pos_minimap;
+    SDL_Rect pos_joueur;
+} Minimap;
+void initMinimap(Minimap *m); 
+void afficherMinimap(Minimap m, SDL_Surface *screen);
+void majMinimap(SDL_Rect posJoueur, Minimap *m, SDL_Rect camera, int scale);
+void libererMinimap(Minimap *m);
+void animerBackground(SDL_Rect *camera, SDL_Surface *background, SDL_Surface *screen);
+SDL_Color GetPixel(SDL_Surface *surface, int x, int y);
+int collisionParfaite(SDL_Surface *masque, SDL_Rect perso);
+#endif
