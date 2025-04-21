@@ -1,0 +1,62 @@
+#include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+#include "menu.h"
+
+int main(int argc, char *argv[]) {
+    SDL_Surface *screen = NULL;
+
+    
+    initializeMenu(&screen);
+
+    
+    loadMenuAssets();
+
+    
+    if (musicMainMenu) {
+        Mix_PlayMusic(musicMainMenu, -1);
+    }
+
+    
+    int quit = 0;
+    SDL_Event event;
+
+    while (!quit) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                quit = 1;
+            } else if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    quit = 1;
+                }
+            }
+
+            //  Handle mouse clicks
+            if (event.type == SDL_MOUSEBUTTONDOWN) {
+                int mouseX = event.button.x;
+                int mouseY = event.button.y;
+
+                if (mouseX >= buttonPlay.image.position.x && mouseX <= buttonPlay.image.position.x + buttonPlay.image.image->w &&
+                    mouseY >= buttonPlay.image.position.y && mouseY <= buttonPlay.image.position.y + buttonPlay.image.image->h) {
+                    handleButtonClick(&buttonPlay);
+                }
+
+                if (mouseX >= buttonOptions.image.position.x && mouseX <= buttonOptions.image.position.x + buttonOptions.image.image->w &&
+                    mouseY >= buttonOptions.image.position.y && mouseY <= buttonOptions.image.position.y + buttonOptions.image.image->h) {
+                    handleButtonClick(&buttonOptions);
+                }
+
+                if (mouseX >= buttonQuit.image.position.x && mouseX <= buttonQuit.image.position.x + buttonQuit.image.image->w &&
+                    mouseY >= buttonQuit.image.position.y && mouseY <= buttonQuit.image.position.y + buttonQuit.image.image->h) {
+                    handleButtonClick(&buttonQuit);
+                }
+            }
+        }
+
+        
+        displayMainMenu(screen);
+    }
+
+  
+    cleanup(screen);
+    return 0;
+}
