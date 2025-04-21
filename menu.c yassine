@@ -1,0 +1,101 @@
+#include "menu.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+
+Mix_Music *musicMainMenu = NULL;
+Image backgroundMainMenu;
+Button buttonPlay;
+Button buttonOptions;
+Button buttonQuit;
+
+void initializeMenu(SDL_Surface **screen) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+        printf("SDL Initialization failed: %s\n", SDL_GetError());
+        exit(1);
+    }
+
+    *screen = SDL_SetVideoMode(800, 600, 32, SDL_SWSURFACE);
+    if (*screen == NULL) {
+        printf("Screen setup failed: %s\n", SDL_GetError());
+        exit(1);
+    }
+
+    SDL_WM_SetCaption("Game Menu", NULL);
+
+    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) < 0) {
+        printf("SDL_mixer Initialization failed: %s\n", Mix_GetError());
+        exit(1);
+    }
+}
+
+void loadMenuAssets(void) {
+    backgroundMainMenu.image = SDL_LoadBMP("background1.bmp");
+    if (!backgroundMainMenu.image) {
+        printf("Failed to load background: %s\n", SDL_GetError());
+    }
+
+    buttonPlay.image.image = SDL_LoadBMP("play_button.bmp");
+    buttonPlay.image.position.x = 800;
+    buttonPlay.image.position.y = 600;
+    buttonPlay.action = handlePlayAction;
+
+    buttonOptions.image.image = SDL_LoadBMP("options_button.bmp");
+    buttonOptions.image.position.x = 900;
+    buttonOptions.image.position.y = 600;
+    buttonOptions.action = handleOptionsAction;
+
+    buttonQuit.image.image = SDL_LoadBMP("quit_button.bmp");
+    buttonQuit.image.position.x = 1100;
+    buttonQuit.image.position.y = 600;
+    buttonQuit.action = handleQuitAction;
+
+    musicMainMenu = Mix_LoadMUS("mainmenu_music.mp3");
+    if (!musicMainMenu) {
+        printf("Failed to load music: %s\n", Mix_GetError());
+    }
+}
+
+
+
+void handleButtonClick(Button *button) {
+    if (button->action != NULL) {
+        button->action();  // Execute assigned action
+    }
+}
+
+
+void displayMainMenu(SDL_Surface *screen) {
+    SDL_BlitSurface(backgroundMainMenu.image, NULL, screen, NULL);
+    SDL_BlitSurface(buttonPlay.image.image, NULL, screen, &buttonPlay.image.position);
+    SDL_BlitSurface(buttonOptions.image.image, NULL, screen, &buttonOptions.image.position);
+    SDL_BlitSurface(buttonQuit.image.image, NULL, screen, &buttonQuit.image.position);
+    SDL_Flip(screen);
+}
+
+
+void handlePlayAction(void) {
+if SDL_LoadBMP("play_button.bmp")>0;
+    printf("Play button clicked! ...\n");
+}
+
+void handleOptionsAction(void) {
+if SDL_LoadBMP("options_button.bmp")>0;
+    printf("Options button clicked! Opening settings...\n");
+}
+
+void handleQuitAction(void) {
+if SDL_LoadBMP("quit_button.bmp")>0;
+    printf("Quit button clicked! Exiting...\n");
+    exit(0);
+}
+
+
+void cleanup(SDL_Surface *screen) {
+    SDL_FreeSurface(backgroundMainMenu.image);
+    SDL_FreeSurface(buttonPlay.image.image);
+    SDL_FreeSurface(buttonOptions.image.image);
+    SDL_FreeSurface(buttonQuit.image.image);
+    Mix_FreeMusic(musicMainMenu);
+    SDL_Quit();
+}
